@@ -87,6 +87,17 @@ python child_agent/video_agent.py edit -i edit_v1.json -t timeline_v1.json
 python child_agent/video_agent.py edit -i edit_v2.json -t timeline_v2.json
 ```
 
+**素材路径没有写死**：`analyze` 的素材来自 `-i`，`edit` 的素材来自指令 JSON 的 `segments[].source`，
+可用 `--source` / `--output` 在命令行临时覆盖，换素材、换输出文件都不必改 JSON：
+
+```bash
+# 用同一个剪辑方案处理任意视频（图片卡片片段保持原样）
+python child_agent/video_agent.py edit -i edit_real.json ^
+  --source "C:\path\to\your_video.mp4" --output output/my_edit.mp4 -t timeline_my.json
+```
+
+素材缺失时返回退出码 2 并列出缺失路径，不会抛 ffmpeg 原始报错。
+
 ## 密钥与安全
 
 - API Key 只存放在 `parent_agent/config.json`（已被 `.gitignore` 忽略，**不会进入 git 仓库**），

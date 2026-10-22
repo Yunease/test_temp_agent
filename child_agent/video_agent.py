@@ -50,6 +50,9 @@ DEFAULT_TEST_VIDEO = os.path.normpath(
     os.path.join(_PROJECT_ROOT, os.pardir, "test mp4", "test.mp4")
 )
 
+# 图片素材扩展名：这些片段视为静态卡片，`edit --source` 覆盖时会跳过
+IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".bmp", ".webp")
+
 
 # ---------------------------------------------------------------------------
 # 工具函数
@@ -389,7 +392,7 @@ def process_segment(segment: ClipSegment, width: int, height: int, fps: float,
     vf = build_segment_filter(segment, width, height, fps)
 
     ext = os.path.splitext(segment.source)[1].lower()
-    is_image = ext in (".png", ".jpg", ".jpeg", ".bmp", ".webp")
+    is_image = ext in IMAGE_EXTS
     duration = max(0.1, segment.end - segment.start)
 
     if is_image:
@@ -567,6 +570,42 @@ def edit_command(args: argparse.Namespace) -> int:
     """
     instruction_path = args.instruction
     instruction = parse_edit_json(instruction_path)
+
+    # 命令行覆盖：素材与输出路径，避免为换素材而改动 JSON
+    source_override = getattr(args, "source", None)
+    output_override = getattr(args, "output", None)
+    if source_override:
+        if not os.path.isfile(source_override):
+            print(f"错误：--source 指定的素材不存在：{source_override}", file=sys.stderr)
+            return 2
+        replaced = 0
+        for segment in instruction.segments:
+            if os.path.splitext(segment.source)[1].lower() not in IMAGE_EXTS:
+                segment.source = source_override
+                replaced += 1
+        if replaced == 0:
+            print("错误：指令中没有可替换的视频片段（全部为图片卡片）。", file=sys.stderr)
+            return 2
+        print(f"[..] 素材已覆盖为: {source_override}（{replaced} 个视频片段）")
+    if output_override:
+        instruction.output = output_override
+
+    # 输出目录不存在时自动创建
+    output_dir = os.path.dirname(os.path.abspath(instruction.output))
+    if output_dir and not os.path.isdir(output_dir):
+        os.makedirs(output_dir, exist_ok=True)
+
+    # 素材存在性校验：缺失时给出可操作的提示，而不是抛 ffmpeg 原始报错
+    missing = [
+        seg.source for seg in instruction.segments
+        if not os.path.isfile(seg.source)
+    ]
+    if missing:
+        print("错误：以下素材文件不存在：", file=sys.stderr)
+        for path in dict.fromkeys(missing):
+            print(f"  - {path}", file=sys.stderr)
+        print("提示：可用 `--source <视频路径>` 覆盖指令中的视频素材。", file=sys.stderr)
+        return 2
 
     # 若指定了 base_timeline，则读取并合并（增量修改）
     base_segments: List[ClipSegment] = []
@@ -915,6 +954,14 @@ def build_parser() -> argparse.ArgumentParser:
     edit_parser = subparsers.add_parser("edit", help="根据 JSON 剪辑指令渲染视频")
     edit_parser.add_argument("-i", "--instruction", required=True, help="剪辑指令 JSON 文件路径")
     edit_parser.add_argument("-t", "--timeline", default=None, help="输出 timeline JSON 路径（可选）")
+    edit_parser.add_argument(
+        "-s", "--source", default=None, metavar="PATH",
+        help="覆盖指令中的视频素材路径（图片卡片保持原样），换素材无需改 JSON",
+    )
+    edit_parser.add_argument(
+        "-o", "--output", default=None, metavar="PATH",
+        help="覆盖指令中的输出成片路径（避免覆盖原有产物）",
+    )
 
     # --test 自检
     parser.add_argument("--test", action="store_true", help="自检模式")
