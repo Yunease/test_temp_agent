@@ -1,0 +1,55 @@
+{
+  "output": "C:\\Users\\26420\\Desktop\\temp\\temp\\agent_project\\output\\real_demo_pro.mp4",
+  "width": 1280,
+  "height": 720,
+  "fps": 30,
+  "video_codec": "libx264",
+  "audio_codec": "aac",
+  "preset": "medium",
+  "crf": "23",
+  "segments": [
+    {
+      "index": 0,
+      "source": "material/title_card.png",
+      "start": 0.0,
+      "end": 2.5,
+      "speed": 1.0,
+      "fade_in": 0.0,
+      "fade_out": 0.0,
+      "text_watermarks": [],
+      "intermediate_file": "C:\\Users\\26420\\AppData\\Local\\Temp\\tmpqwysd_z5\\segment_0000.mp4"
+    },
+    {
+      "index": 1,
+      "source": "material/test_real.mp4",
+      "start": 30.0,
+      "end": 42.0,
+      "speed": 1.0,
+      "fade_in": 0.0,
+      "fade_out": 0.0,
+      "text_watermarks": [
+        {
+          "text": "真实素材 · Coding Agent 剪辑",
+          "x": 40,
+          "y": 40,
+          "fontsize": 30,
+          "fontcolor": "white",
+          "enable_start": 0,
+          "enable_end": 12
+        }
+      ],
+      "intermediate_file": "C:\\Users\\26420\\AppData\\Local\\Temp\\tmpqwysd_z5\\segment_0001.mp4"
+    },
+    {
+      "index": 2,
+      "source": "material/end_card.png",
+      "start": 0.0,
+      "end": 2.0,
+      "speed": 1.0,
+      "fade_in": 0.0,
+      "fade_out": 0.0,
+      "text_watermarks": [],
+      "intermediate_file": "C:\\Users\\26420\\AppData\\Local\\Temp\\tmpqwysd_z5\\segment_0002.mp4"
+    }
+  ]
+}

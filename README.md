@@ -43,6 +43,7 @@ agent_project/
 │  analyze: ffprobe 提取元数据 → material_analysis.json        │
 │  edit:    读 timeline(JSON) → 拼装 ffmpeg → 导出 mp4         │
 │           支持 区间裁剪 / 多段拼接 / 淡入淡出 / 文字水印 / 变速│
+│           交叉淡化转场 / 片头片尾卡片(图片段) / 背景音乐混音    │
 │           增量修改：基于上一版 timeline 推导新 timeline         │
 └─────────────────────────────────────────────────────────────┘
 ```

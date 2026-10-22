@@ -206,6 +206,10 @@ class EditInstruction:
     crf: str = DEFAULT_CRF
     segments: List[ClipSegment] = field(default_factory=list)
     base_timeline: Optional[str] = None
+    # 新增：成片感相关能力
+    transition: float = 0.0          # 片段间交叉淡化（转场）时长，0 表示硬切
+    background_music: Optional[str] = None   # 背景音乐文件路径（可选）
+    bgm_volume: float = 0.25         # 背景音乐相对音量（0~1）
 
 
 def parse_edit_json(json_path: str) -> EditInstruction:
@@ -272,6 +276,9 @@ def parse_edit_json(json_path: str) -> EditInstruction:
         crf=data.get("crf", DEFAULT_CRF),
         segments=segments,
         base_timeline=data.get("base_timeline"),
+        transition=float(data.get("transition", 0.0) or 0.0),
+        background_music=data.get("background_music"),
+        bgm_volume=float(data.get("bgm_volume", 0.25) or 0.25),
     )
 
 
@@ -364,35 +371,76 @@ def process_segment(segment: ClipSegment, width: int, height: int, fps: float,
                     temp_dir: str, index: int) -> str:
     """
     处理单个片段，输出中间文件，返回中间文件路径。
+    支持普通视频片段与图片片段（图片自动循环并补静音轨，可用作片头/片尾卡片）。
     """
     output_path = os.path.join(temp_dir, f"segment_{index:04d}.mp4")
     vf = build_segment_filter(segment, width, height, fps)
 
-    cmd = [
-        "ffmpeg",
-        "-y",
-        "-i", segment.source,
-        "-vf", vf,
-        "-af", f"atrim=start={segment.start}:end={segment.end},asetpts=PTS-STARTPTS",
-        "-c:v", DEFAULT_VIDEO_CODEC,
-        "-preset", DEFAULT_PRESET,
-        "-crf", DEFAULT_CRF,
-        "-c:a", DEFAULT_AUDIO_CODEC,
-        "-b:a", "192k",
-        "-avoid_negative_ts", "make_zero",
-        "-fflags", "+genpts",
-        output_path,
-    ]
+    ext = os.path.splitext(segment.source)[1].lower()
+    is_image = ext in (".png", ".jpg", ".jpeg", ".bmp", ".webp")
+    duration = max(0.1, segment.end - segment.start)
+
+    if is_image:
+        # 图片：循环生成视频 + 静音音频，时长 = end - start
+        cmd = [
+            "ffmpeg",
+            "-y",
+            "-loop", "1",
+            "-i", segment.source,
+            "-f", "lavfi",
+            "-i", f"anullsrc=r=44100:cl=stereo",
+            "-t", f"{duration:.3f}",
+            "-vf", vf,
+            "-c:v", DEFAULT_VIDEO_CODEC,
+            "-preset", DEFAULT_PRESET,
+            "-crf", DEFAULT_CRF,
+            "-c:a", DEFAULT_AUDIO_CODEC,
+            "-b:a", "192k",
+            "-shortest",
+            "-avoid_negative_ts", "make_zero",
+            "-fflags", "+genpts",
+            output_path,
+        ]
+    else:
+        cmd = [
+            "ffmpeg",
+            "-y",
+            "-i", segment.source,
+            "-vf", vf,
+            "-af", f"atrim=start={segment.start}:end={segment.end},asetpts=PTS-STARTPTS",
+            "-c:v", DEFAULT_VIDEO_CODEC,
+            "-preset", DEFAULT_PRESET,
+            "-crf", DEFAULT_CRF,
+            "-c:a", DEFAULT_AUDIO_CODEC,
+            "-b:a", "192k",
+            "-avoid_negative_ts", "make_zero",
+            "-fflags", "+genpts",
+            output_path,
+        ]
     run_command(cmd)
     return output_path
 
 
 def concatenate_segments(segment_files: List[str], output_path: str,
                          video_codec: str, audio_codec: str,
-                         preset: str, crf: str) -> None:
+                         preset: str, crf: str,
+                         durations: Optional[List[float]] = None,
+                         transition: float = 0.0) -> None:
     """
-    使用 ffmpeg concat demuxer 拼接多个片段。
+    拼接多个片段。
+    - transition <= 0 或片段数 < 2：使用 concat demuxer 硬切拼接。
+    - transition > 0：使用 filter_complex 的 xfade/acrossfade 做交叉淡化转场。
     """
+    n = len(segment_files)
+    if transition > 0 and n >= 2 and durations and len(durations) == n:
+        # 转场时长不能超过任意片段时长的一半，否则偏移非法
+        t = min(transition, min(durations) / 2.0, 2.0)
+        if t > 0.05:
+            _concat_with_xfade(segment_files, durations, t, output_path,
+                               video_codec, audio_codec, preset, crf)
+            return
+
+    # 默认：concat demuxer 硬切
     with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as f:
         concat_file = f.name
         for seg in segment_files:
@@ -419,6 +467,86 @@ def concatenate_segments(segment_files: List[str], output_path: str,
             os.remove(concat_file)
         except OSError:
             pass
+
+
+def _concat_with_xfade(segment_files: List[str], durations: List[float], t: float,
+                       output_path: str, video_codec: str, audio_codec: str,
+                       preset: str, crf: str) -> None:
+    """
+    使用 filter_complex 构建交叉淡化（视频 xfade + 音频 acrossfade）拼接链。
+    """
+    inputs = []
+    for seg in segment_files:
+        inputs += ["-i", seg]
+
+    # 累计偏移：第 k 次转场的 offset = 前 k 段有效时长之和 - k*t
+    offsets = []
+    acc = 0.0
+    for i in range(n := len(segment_files) - 1):
+        acc += durations[i] - t
+        offsets.append(acc)
+
+    video_chain = ""
+    audio_chain = ""
+    vlabel = "0:v"
+    alabel = "0:a"
+    for i in range(n):
+        vnext = f"v{i}" if i == n - 1 else f"v{i}"
+        anext = f"a{i}" if i == n - 1 else f"a{i}"
+        video_chain += f"[{vlabel}][{i + 1}:v]xfade=transition=fade:duration={t}:offset={offsets[i]:.4f}[{vnext}];"
+        audio_chain += f"[{alabel}][{i + 1}:a]acrossfade=d={t:.4f}[{anext}];"
+        vlabel = f"{vnext}"
+        alabel = f"{anext}"
+    # 最后一段标签已是 v{n-1}/a{n-1}
+    last_v = f"v{n - 1}"
+    last_a = f"a{n - 1}"
+
+    filter_complex = video_chain + audio_chain
+
+    cmd = [
+        "ffmpeg",
+        "-y",
+        *inputs,
+        "-filter_complex", filter_complex,
+        "-map", f"[{last_v}]",
+        "-map", f"[{last_a}]",
+        "-c:v", video_codec,
+        "-preset", preset,
+        "-crf", crf,
+        "-c:a", audio_codec,
+        "-b:a", "192k",
+        "-movflags", "+faststart",
+        output_path,
+    ]
+    run_command(cmd)
+
+
+def apply_background_music(video_path: str, bgm_path: str, output_path: str,
+                           bgm_volume: float, audio_codec: str) -> None:
+    """
+    为成片叠加背景音乐：原始音轨音量略降，背景音乐循环铺满整段并调整音量。
+    """
+    v = max(0.0, min(1.0, bgm_volume))
+    main_vol = 1.0 - 0.4 * v  # 主音轨随 BGM 占比适度降低
+    cmd = [
+        "ffmpeg",
+        "-y",
+        "-i", video_path,
+        "-stream_loop", "-1",
+        "-i", bgm_path,
+        "-filter_complex",
+        f"[0:a]volume={main_vol:.3f}[main];"
+        f"[1:a]volume={v:.3f}[bg];"
+        f"[main][bg]amix=inputs=2:duration=first:dropout_transition=2[a]",
+        "-map", "0:v",
+        "-map", "[a]",
+        "-c:v", "copy",
+        "-c:a", audio_codec,
+        "-b:a", "192k",
+        "-movflags", "+faststart",
+        output_path,
+    ]
+    run_command(cmd)
 
 
 def edit_command(args: argparse.Namespace) -> int:
@@ -463,9 +591,15 @@ def edit_command(args: argparse.Namespace) -> int:
 
     try:
         segment_files = []
+        segment_durations = []
         for index, segment in enumerate(all_segments):
             seg_file = process_segment(segment, width, height, fps, temp_dir, index)
             segment_files.append(seg_file)
+            # 计算该片段实际输出时长（用于转场偏移计算）
+            dur = max(0.1, segment.end - segment.start)
+            if segment.speed != 1.0 and segment.speed > 0:
+                dur = dur / segment.speed
+            segment_durations.append(dur)
 
             timeline_segments.append({
                 "index": index,
@@ -479,38 +613,60 @@ def edit_command(args: argparse.Namespace) -> int:
                 "intermediate_file": seg_file,
             })
 
-        # 拼接
+        # 拼接（含可选交叉淡化转场）
         output_path = instruction.output
+        temp_final = output_path
+        if instruction.background_music and os.path.isfile(instruction.background_music):
+            # 先产出无 BGM 的中间成片，再叠加背景音乐
+            base_name, ext = os.path.splitext(output_path)
+            temp_final = f"{base_name}_nobgm{ext}"
         concatenate_segments(
             segment_files,
-            output_path,
+            temp_final,
             instruction.video_codec,
             instruction.audio_codec,
             instruction.preset,
             instruction.crf,
+            durations=segment_durations,
+            transition=instruction.transition,
         )
 
-        # 生成 timeline JSON
-        timeline = {
-            "output": os.path.abspath(output_path),
-            "width": width,
-            "height": height,
-            "fps": fps,
-            "video_codec": instruction.video_codec,
-            "audio_codec": instruction.audio_codec,
-            "preset": instruction.preset,
-            "crf": instruction.crf,
-            "segments": timeline_segments,
-        }
-        timeline_path = args.timeline or (os.path.splitext(output_path)[0] + "_timeline.json")
-        with open(timeline_path, "w", encoding="utf-8") as f:
-            json.dump(timeline, f, ensure_ascii=False, indent=2)
+        # 背景音乐混音
+        if instruction.background_music and os.path.isfile(instruction.background_music):
+            if not os.path.isfile(temp_final):
+                print("错误：中间成片未生成，无法叠加背景音乐。", file=sys.stderr)
+                return 1
+            apply_background_music(
+                temp_final, instruction.background_music,
+                output_path, instruction.bgm_volume, instruction.audio_codec,
+            )
+            try:
+                os.remove(temp_final)
+            except OSError:
+                pass
 
-        print(f"视频已导出: {output_path}")
-        print(f"时间线已导出: {timeline_path}")
-        return 0
     finally:
         temp_dir_obj.cleanup()
+
+    # 生成 timeline JSON
+    timeline = {
+        "output": os.path.abspath(output_path),
+        "width": width,
+        "height": height,
+        "fps": fps,
+        "video_codec": instruction.video_codec,
+        "audio_codec": instruction.audio_codec,
+        "preset": instruction.preset,
+        "crf": instruction.crf,
+        "segments": timeline_segments,
+    }
+    timeline_path = args.timeline or (os.path.splitext(output_path)[0] + "_timeline.json")
+    with open(timeline_path, "w", encoding="utf-8") as f:
+        json.dump(timeline, f, ensure_ascii=False, indent=2)
+
+    print(f"视频已导出: {output_path}")
+    print(f"时间线已导出: {timeline_path}")
+    return 0
 
 
 # ---------------------------------------------------------------------------
@@ -620,6 +776,54 @@ def self_test() -> int:
         assert "segments" in timeline_data
         assert len(timeline_data["segments"]) == 1
         print("[OK] 时间线 JSON 结构正确。")
+
+        # 6. 测试新增能力：交叉淡化转场 + 图片卡片 + 背景音乐
+        # 6.1 生成片头卡片（图片）与背景音乐（1 秒正弦音循环）
+        title_card = os.path.join(tmpdir, "card.png")
+        bgm_file = os.path.join(tmpdir, "bgm.wav")
+        card_cmd = [
+            "ffmpeg", "-y",
+            "-f", "lavfi", "-i", "color=c=0x1a3a5a:s=1280x720",
+            "-vf", "drawtext=text='Coding Agent Demo':x=(w-tw)/2:y=(h-th)/2:"
+                   "fontsize=64:fontcolor=white:fontfile='C\\:/Windows/Fonts/msyh.ttc'",
+            "-frames:v", "1", title_card,
+        ]
+        ret, _, stderr = run_command(card_cmd)
+        if ret != 0:
+            print(f"[WARN] 片头卡片生成跳过（字体缺失）: {stderr}")
+        else:
+            bgm_cmd = [
+                "ffmpeg", "-y",
+                "-f", "lavfi", "-i", "sine=frequency=330:duration=1",
+                "-c:a", "pcm_s16le", bgm_file,
+            ]
+            ret, _, stderr = run_command(bgm_cmd)
+            if ret == 0 and os.path.isfile(title_card):
+                edit2_path = os.path.join(tmpdir, "edit2.json")
+                out2 = os.path.join(tmpdir, "output2.mp4")
+                tl2 = os.path.join(tmpdir, "timeline2.json")
+                edit2 = {
+                    "output": out2,
+                    "width": 1280,
+                    "height": 720,
+                    "fps": 30,
+                    "transition": 0.5,
+                    "background_music": bgm_file,
+                    "bgm_volume": 0.3,
+                    "segments": [
+                        {"source": title_card, "start": 0.0, "end": 2.0},
+                        {"source": test_video, "start": 0.0, "end": 1.5},
+                    ],
+                }
+                with open(edit2_path, "w", encoding="utf-8") as f:
+                    json.dump(edit2, f, ensure_ascii=False, indent=2)
+                class Args2:
+                    instruction = edit2_path
+                    timeline = tl2
+                if edit_command(Args2()) != 0 or not os.path.isfile(out2):
+                    print("[FAIL] 转场/卡片/BGM 测试失败。", file=sys.stderr)
+                    return 1
+                print("[OK] 转场 + 片头卡片 + 背景音乐 渲染成功。")
 
     print("自检全部通过。")
     return 0

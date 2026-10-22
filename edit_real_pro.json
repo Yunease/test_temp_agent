@@ -1,0 +1,37 @@
+{
+  "output": "output/real_demo_pro.mp4",
+  "width": 1280,
+  "height": 720,
+  "fps": 30,
+  "transition": 0.6,
+  "background_music": "material/bgm.wav",
+  "bgm_volume": 0.18,
+  "segments": [
+    {
+      "source": "material/title_card.png",
+      "start": 0,
+      "end": 2.5
+    },
+    {
+      "source": "material/test_real.mp4",
+      "start": 30,
+      "end": 42,
+      "text_watermarks": [
+        {
+          "text": "真实素材 · Coding Agent 剪辑",
+          "x": 40,
+          "y": 40,
+          "fontsize": 30,
+          "fontcolor": "white",
+          "enable_start": 0,
+          "enable_end": 12
+        }
+      ]
+    },
+    {
+      "source": "material/end_card.png",
+      "start": 0,
+      "end": 2.0
+    }
+  ]
+}
