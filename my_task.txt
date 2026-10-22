@@ -1,0 +1,11 @@
+【任务】冒烟测试：验证 Coding Agent 闭环可用（严禁修改源码）
+
+请在项目根目录的 logs/ 下创建 smoke_test.txt，内容包含三行：
+1. Coding Agent 自检通过
+2. 你当前使用的模型名称
+3. 本次运行时间（ISO 格式）
+
+要求：
+- 只使用 write_file 创建 logs/smoke_test.txt，禁止修改任何现有源码、配置或数据文件。
+- 创建后用 read_file 读回，确认三行内容齐全。
+- 最后调用 submit_result 提交，并用一句话说明结果。

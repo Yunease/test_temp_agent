@@ -67,7 +67,13 @@ pip install -r requirements.txt        # openai / jinja2 / pydantic / requests
 # 从项目根目录运行；母体会把子体写到 child_agent/video_agent.py
 python parent_agent/coding_agent.py --task-file task_phase2.txt --max-rounds 40
 # 完成后生成 child_agent/video_agent.py；轨迹 logs/trajectory.json、日志 logs/execution.log
+
+# 首次安装建议先跑冒烟任务：只在 logs/ 下写一个文件，不碰源码
+python parent_agent/coding_agent.py --task-file my_task.txt --max-rounds 10
 ```
+
+> 任务文件缺失时，程序会直接提示「可用任务文件」并以退出码 2 结束，不会抛异常堆栈；
+> 相对路径先按当前目录查找，找不到再回退到项目根目录。
 
 ### 4. 子体实操
 ```bash
