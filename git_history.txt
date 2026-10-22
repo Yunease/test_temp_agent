@@ -1,0 +1,4 @@
+* e7a38f3 chore: 完成二次增量修改、素材分析与全部交付材料（README/requirements/REPORT/时间线）
+* a731074 feat(video-agent): 由 Coding Agent 自主生成 video_agent.py 并完成语法故障自愈（returncode=0）
+* 2936452 refactor(coding-agent): 借鉴 mini-swe-agent 拆分为 Model/Environment/Agent 三层，增加异常分级、限额与轨迹序列化
+* d3370ff feat: complete initial Coding Agent with execution & self-debug loop
