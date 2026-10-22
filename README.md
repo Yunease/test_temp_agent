@@ -87,6 +87,14 @@ python child_agent/video_agent.py edit -i edit_v1.json -t timeline_v1.json
 python child_agent/video_agent.py edit -i edit_v2.json -t timeline_v2.json
 ```
 
+## 密钥与安全
+
+- API Key 只存放在 `parent_agent/config.json`（已被 `.gitignore` 忽略，**不会进入 git 仓库**），
+  或通过环境变量 `CODING_AGENT_API_KEY` 注入。
+- 仓库中只有不含密钥的模板 `parent_agent/config.example.json`（`api_key` 为 `YOUR_API_KEY_HERE`）。
+- `.gitignore` 额外忽略 `.env*`、`*.key`、`*.pem`、`secrets*.json`，降低误提交风险。
+- 若怀疑密钥泄露，请立即在服务商控制台**轮换密钥**（吊销旧 key 并生成新 key）；仅删除文件不足以从 git 历史中清除。
+
 ## 测试与自检
 
 项目没有独立的 `tests/` 目录，测试入口内置于子体，默认对**项目根目录同级**的

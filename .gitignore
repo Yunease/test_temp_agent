@@ -1,4 +1,12 @@
+# --- 密钥与本地配置（严禁入库） ---
 config.json
+.env
+.env.*
+*.key
+*.pem
+secrets*.json
+
+# --- 运行产物 ---
 __pycache__/
 *.pyc
 output/
