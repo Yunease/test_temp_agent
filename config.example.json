@@ -1,0 +1,6 @@
+{
+  "base_url": "https://tokenrhythm.studio/v1",
+  "model": "kimi-k2.7-code",
+  "api_key": "YOUR_API_KEY_HERE",
+  "_comment": "复制本文件为 config.json 并填入你的 API Key；也可通过环境变量 CODING_AGENT_API_KEY / CODING_AGENT_BASE_URL / CODING_AGENT_MODEL 覆盖"
+}
