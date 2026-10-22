@@ -1,4 +1,14 @@
-* e7a38f3 chore: 完成二次增量修改、素材分析与全部交付材料（README/requirements/REPORT/时间线）
-* a731074 feat(video-agent): 由 Coding Agent 自主生成 video_agent.py 并完成语法故障自愈（returncode=0）
-* 2936452 refactor(coding-agent): 借鉴 mini-swe-agent 拆分为 Model/Environment/Agent 三层，增加异常分级、限额与轨迹序列化
-* d3370ff feat: complete initial Coding Agent with execution & self-debug loop
+* 2026-10-22  12724e0  chore(license): child_agent/video_agent.py 添加 SPDX / AGPL-3.0 头部标识
+* 2026-10-22  97aec21  chore(license): parent_agent 源文件统一添加 SPDX / AGPL-3.0 头部标识
+* 2026-10-22  42b1199  docs(readme): 新增「开源协议」章节，声明 AGPL-3.0-or-later 授权
+* 2026-10-22  e7b9055  docs(license): 添加 GNU AGPLv3 许可证全文 LICENSE
+* 2026-10-22  d65df2d  feat(video-agent): 新增交叉淡化转场/图片卡片段/背景音乐混音能力，产出真实素材精剪版 real_demo_pro
+* 2026-10-22  d220c30  feat(video-agent): drawtext 支持 fontfile 与 CJK 字体自动探测（修复 Windows 默认字体中文变方框）；新增真实素材剪辑演示 edit_real/timeline_real
+* 2026-10-22  78fcb85  refactor(layout): 母子 Agent 分目录 —— 母体归入 parent_agent/，子体归入 child_agent/，同步任务指令与文档路径
+* 2026-10-22  4c78865  docs(acceptance): execution.log 合并为需求→生成→修复→验证→成片全链路；修正 README 启动命令与实际 CLI 一致
+* 2026-10-22  8955574  docs: 根目录放置 execution.log 与 generation.log 便于交付查阅
+* 2026-10-22  ece18e4  docs: 导出 Git 阶段演进历史 git_history.txt
+* 2026-10-22  e7a38f3  chore: 完成二次增量修改、素材分析与全部交付材料（README/requirements/REPORT/时间线）
+* 2026-10-22  a731074  feat(video-agent): 由 Coding Agent 自主生成 video_agent.py 并完成语法故障自愈（returncode=0）
+* 2026-10-22  2936452  refactor(coding-agent): 借鉴 mini-swe-agent 拆分为 Model/Environment/Agent 三层，增加异常分级、限额与轨迹序列化
+* 2026-10-22  d3370ff  feat: complete initial Coding Agent with execution & self-debug loop
