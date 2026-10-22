@@ -1,0 +1,7 @@
+video_agent.py 当前无法运行：执行 `python video_agent.py --test` 会报错（疑似语法错误）。
+请按以下流程自主修复：
+1. 先执行 `python video_agent.py --test` 查看报错堆栈；
+2. read_file 读取 video_agent.py 定位并理解错误；
+3. 修复代码（write_file 重写/覆盖），确保仅修复错误、不改变已有功能；
+4. 再次执行 `python video_agent.py --test`，若仍报错则重复 2~4，直至 returncode == 0；
+5. 全部通过后调用 submit_result 提交，summary 写明你修复了什么、最终 returncode。
