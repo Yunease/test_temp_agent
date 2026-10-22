@@ -1,0 +1,59 @@
+{
+  "output": "output/v1_output.mp4",
+  "width": 1280,
+  "height": 720,
+  "fps": 30,
+  "video_codec": "libx264",
+  "audio_codec": "aac",
+  "preset": "medium",
+  "crf": "23",
+  "segments": [
+    {
+      "source": "material/clip_a.mp4",
+      "start": 1.0,
+      "end": 5.0,
+      "speed": 1.0,
+      "fade_in": 1.0,
+      "fade_out": 0.5,
+      "text_watermarks": [
+        {
+          "text": "AGENT-1 DEMO",
+          "x": 40,
+          "y": 40,
+          "fontsize": 48,
+          "fontcolor": "white",
+          "enable_start": 0,
+          "enable_end": 4.0
+        }
+      ]
+    },
+    {
+      "source": "material/clip_b.mp4",
+      "start": 0.0,
+      "end": 4.0,
+      "speed": 1.0,
+      "fade_in": 0.5,
+      "fade_out": 0.5,
+      "text_watermarks": []
+    },
+    {
+      "source": "material/clip_c.mp4",
+      "start": 2.0,
+      "end": 8.0,
+      "speed": 1.0,
+      "fade_in": 0.5,
+      "fade_out": 1.0,
+      "text_watermarks": [
+        {
+          "text": "v1 cut",
+          "x": 40,
+          "y": 640,
+          "fontsize": 36,
+          "fontcolor": "yellow",
+          "enable_start": 0,
+          "enable_end": 6.0
+        }
+      ]
+    }
+  ]
+}

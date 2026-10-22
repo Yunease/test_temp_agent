@@ -1,0 +1,8 @@
+# Agent 1 (Coding Agent 母体) 依赖
+openai>=1.0
+jinja2>=3.0
+pydantic>=2.0
+requests>=2.0
+
+# Agent 2 (video_agent.py) 由母体生成，其运行仅依赖本机 ffmpeg/ffprobe（无需 Python 第三方库）。
+# 若生成版本选用 moviepy，则追加：moviepy>=1.0

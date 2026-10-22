@@ -1,0 +1,67 @@
+{
+  "clips": {
+    "clip_a": {
+      "file_path": "C:\\Users\\26420\\Desktop\\temp\\temp\\agent_project\\material\\clip_a.mp4",
+      "duration": 8.0,
+      "width": 1280,
+      "height": 720,
+      "codec_name": "h264",
+      "pix_fmt": "yuv420p",
+      "frame_rate": 30.0,
+      "bit_rate": 3134869,
+      "audio_streams": [
+        {
+          "index": 1,
+          "codec_name": "aac",
+          "sample_rate": "44100",
+          "channels": 1,
+          "channel_layout": "mono"
+        }
+      ],
+      "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+      "size": 3214218
+    },
+    "clip_b": {
+      "file_path": "C:\\Users\\26420\\Desktop\\temp\\temp\\agent_project\\material\\clip_b.mp4",
+      "duration": 6.0,
+      "width": 1280,
+      "height": 720,
+      "codec_name": "h264",
+      "pix_fmt": "yuv420p",
+      "frame_rate": 30.0,
+      "bit_rate": 11585,
+      "audio_streams": [
+        {
+          "index": 1,
+          "codec_name": "aac",
+          "sample_rate": "44100",
+          "channels": 1,
+          "channel_layout": "mono"
+        }
+      ],
+      "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+      "size": 68556
+    },
+    "clip_c": {
+      "file_path": "C:\\Users\\26420\\Desktop\\temp\\temp\\agent_project\\material\\clip_c.mp4",
+      "duration": 10.0,
+      "width": 1280,
+      "height": 720,
+      "codec_name": "h264",
+      "pix_fmt": "yuv420p",
+      "frame_rate": 30.0,
+      "bit_rate": 116317,
+      "audio_streams": [
+        {
+          "index": 1,
+          "codec_name": "aac",
+          "sample_rate": "44100",
+          "channels": 1,
+          "channel_layout": "mono"
+        }
+      ],
+      "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+      "size": 244447
+    }
+  }
+}
