@@ -1,4 +1,6 @@
-# Coding Agent × Video Agent —— 自主编程闭环实操
+# Agent Mitosis · 母体分裂
+
+> **Coding Agent × Video Agent** —— 自主编程闭环实操：一个母体 Agent 自主繁育出子体 Agent 的最小实现
 
 本仓库是「极简母体繁育子体」技术实操的落地产物：用一个最小的 **Coding Agent（母体 / Agent 1）**
 自主编写出 **Video Agent（子体 / Agent 2）** 并完成真实视频剪辑。

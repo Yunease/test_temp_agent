@@ -1,6 +1,6 @@
 # 实操交付说明（一页纸）
 
-> 项目：极简母体繁育子体 —— Coding Agent × Video Agent 自主编程闭环
+> 项目：Agent Mitosis（母体分裂）—— 极简母体繁育子体 · Coding Agent × Video Agent 自主编程闭环
 > 日期：2026-10-22 · 环境：Windows / Python 3.13 / ffmpeg 2025-12-24
 
 ## 一、做了什么
