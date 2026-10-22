@@ -288,6 +288,27 @@ def _escape_text(text: str) -> str:
     return text
 
 
+# 各平台常见的中文字体候选路径（按优先级探测）
+_CJK_FONT_CANDIDATES = [
+    "C:/Windows/Fonts/msyh.ttc",      # Windows 微软雅黑
+    "C:/Windows/Fonts/simhei.ttf",    # Windows 黑体
+    "C:/Windows/Fonts/simsun.ttc",    # Windows 宋体
+    "/System/Library/Fonts/PingFang.ttc",   # macOS 苹方
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",  # Linux Noto CJK
+    "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",          # Linux 文泉驿
+]
+
+
+def _find_cjk_font() -> Optional[str]:
+    """
+    探测本机可用的中文字体文件路径；找不到返回 None（由 ffmpeg 使用默认字体）。
+    """
+    for path in _CJK_FONT_CANDIDATES:
+        if os.path.isfile(path):
+            return path
+    return None
+
+
 def build_segment_filter(segment: ClipSegment, width: int, height: int, fps: float) -> str:
     """
     为单个片段构建 ffmpeg 视频滤镜链。
@@ -323,8 +344,16 @@ def build_segment_filter(segment: ClipSegment, width: int, height: int, fps: flo
         fontcolor = wm.get("fontcolor", "white")
         enable_start = wm.get("enable_start", 0)
         enable_end = wm.get("enable_end", duration)
+        # 自动选择支持中文的字体：优先使用指令中的 fontfile，否则在常见系统中探测 CJK 字体
+        # 注意：Windows 盘符冒号需双重转义（滤镜图引号剥离后，drawtext 选项层仍会按 ':' 分隔）
+        fontfile = wm.get("fontfile") or _find_cjk_font()
+        if fontfile:
+            font_path = _escape_text(fontfile).replace(":", "\\:")
+            font_part = f"fontfile='{font_path}':"
+        else:
+            font_part = ""
         filters.append(
-            f"drawtext=text='{text}':x={x}:y={y}:fontsize={fontsize}:fontcolor={fontcolor}:"
+            f"drawtext={font_part}text='{text}':x={x}:y={y}:fontsize={fontsize}:fontcolor={fontcolor}:"
             f"enable='between(t,{enable_start},{enable_end})'"
         )
 

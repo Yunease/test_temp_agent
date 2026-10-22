@@ -1,0 +1,31 @@
+{
+  "output": "output/real_demo.mp4",
+  "width": 1280,
+  "height": 720,
+  "fps": 30,
+  "video_codec": "libx264",
+  "audio_codec": "aac",
+  "preset": "medium",
+  "crf": "23",
+  "segments": [
+    {
+      "source": "material/test_real.mp4",
+      "start": 10,
+      "end": 22,
+      "speed": 1.0,
+      "fade_in": 1.0,
+      "fade_out": 1.0,
+      "text_watermarks": [
+        {
+          "text": "真实素材演示 - Coding Agent 生成",
+          "x": 40,
+          "y": 40,
+          "fontsize": 36,
+          "fontcolor": "white",
+          "enable_start": 0,
+          "enable_end": 12
+        }
+      ]
+    }
+  ]
+}
