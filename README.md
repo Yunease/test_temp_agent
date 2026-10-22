@@ -21,8 +21,9 @@ agent_project/
 ├── config.example.json        # 配置样例（不含密钥）
 ├── requirements.txt           # 依赖
 ├── logs/
-│   ├── trajectory.json        # 结构化执行轨迹（可完整复盘每一轮）
-│   └── execution.log          # 人类可读执行日志（自修复闭环全程记录）
+│   ├── trajectory.json        # 结构化执行轨迹（故障自愈阶段，可完整复盘每一轮）
+│   ├── generation_trajectory.json  # 结构化执行轨迹（子体生成阶段）
+│   └── execution.log          # 人类可读执行日志（需求→生成→修复→验证→成片 全链路）
 ├── material/                  # 现场素材（clip_a/b/c.mp4 + logo.png）
 ├── output/                    # 成片 v1_output.mp4 / v2_output.mp4
 ├── material_analysis.json     # 素材元数据报告
@@ -71,16 +72,14 @@ python coding_agent.py --task-file task_phase2.txt --max-rounds 40
 ### 4. 子体实操
 ```bash
 # 素材元数据提取
-python video_agent.py analyze material/clip_a.mp4 -o material_analysis.json
+python video_agent.py analyze -i material/clip_a.mp4 -o material_analysis.json
 
-# 首轮剪辑（区间裁剪 + 拼接 + 淡入淡出 + 水印 + 变速）
-python video_agent.py edit -i edit_v1.json -o output/v1_output.mp4
+# 首轮剪辑（区间裁剪 + 拼接 + 淡入淡出 + 水印），导出成片与时间线
+python video_agent.py edit -i edit_v1.json -t timeline_v1.json
 
 # 二次增量修改（开头 1.5x 变速 + 结尾 2s 黑屏淡出）
-python video_agent.py edit -i edit_v2.json -o output/v2_output.mp4
+python video_agent.py edit -i edit_v2.json -t timeline_v2.json
 ```
-
-> 以上子体命令的具体参数以 `python video_agent.py --help` 实际输出为准（由母体生成）。
 
 ## 设计要点（对照参考实现 mini-swe-agent）
 
