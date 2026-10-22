@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Agent Project Contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """Agent 核心：自主编程闭环主循环。
 
 设计借鉴 mini-swe-agent 的 DefaultAgent：

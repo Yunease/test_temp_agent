@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Agent Project Contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """模型层（Model）：对 OpenAI 兼容 LLM 的封装。
 
 负责：发起请求、解析工具调用、统计 token/调用次数、构造观测消息、提供模板变量。

@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Agent Project Contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """环境层（Environment）：负责执行动作并产出观测结果。
 
 借鉴 mini-swe-agent 的 LocalEnvironment：执行命令返回结构化输出、

@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Agent Project Contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """Agent 异常分级（借鉴 mini-swe-agent 的设计）。
 
 - FormatError      模型返回内容无法解析为合法动作（如缺少 tool call / 参数非法）。

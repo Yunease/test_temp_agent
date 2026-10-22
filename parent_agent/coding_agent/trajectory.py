@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Agent Project Contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """轨迹渲染：把结构化轨迹（trajectory.json）渲染为人类可读的 execution.log。
 
 交付要求：日志需清晰展现

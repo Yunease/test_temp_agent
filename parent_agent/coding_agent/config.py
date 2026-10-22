@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Agent Project Contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """配置层：Agent / 模型 / 环境 的 pydantic 配置 + 提示词模板。
 
 借鉴 mini-swe-agent：system_template 与 instance_template 用 jinja2 渲染，

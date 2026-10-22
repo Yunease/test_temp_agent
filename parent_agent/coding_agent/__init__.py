@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Agent Project Contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """coding_agent: 自主编程闭环母体（模块化重构版，借鉴 mini-swe-agent 架构）。
 
 模块划分：

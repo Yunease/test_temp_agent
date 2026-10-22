@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Agent Project Contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """工具层（Tool / Action 实现）。
 
 定义 3 个基础工具 + 1 个终止工具：
