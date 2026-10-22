@@ -2,7 +2,7 @@
 
 > **项目定位**：用一个最小的 Coding Agent（母体）自主编写出 Video Agent（子体），并完成真实素材的素材分析 → 两次剪辑 → 成片交付的完整闭环。
 > **代码仓库**：<https://github.com/Yunease/test_temp_agent> ｜ **开源协议**：GNU AGPLv3
-> **文档生成时间**：2026-10-22 ｜ **对应提交**：`8a75fb5`（第 21 次提交）
+> **文档生成时间**：2026-10-22 ｜ **对应提交**：`71fdbee`（第 24 次提交）
 
 ---
 
@@ -11,7 +11,7 @@
 | 编号 | 要求 | 交付位置 |
 |---|---|---|
 | 1 | 两个 Agent 的完整源码、依赖清单、启动命令、配置示例 | 本文第 1 章；源码在 `parent_agent/`、`child_agent/`；`requirements.txt`、`parent_agent/config.example.json` |
-| 2 | 阶段切换 Git 提交及后续开发记录 | 本文第 2 章；逐条明细见 `git_history.txt`（268 行） |
+| 2 | 阶段切换 Git 提交及后续开发记录 | 本文第 2 章；逐条明细见 `git_history.txt`（328 行） |
 | 3 | 完整执行日志：关联需求、工具调用、代码修改、验证、成片 | 本文第 3 章；原始日志 `execution.log`（454 行，四段式） |
 | 4 | 素材分析结果、两次剪辑时间线及对应成片 | 本文第 4 章；`material_analysis.json`、`timeline_v1.json`、`timeline_v2.json`、`output/*.mp4` |
 | 5 | 一页以内说明：架构、完成情况、已知问题、耗时、模型调用费用 | 本文第 5 章（可单独打印为单页） |
@@ -145,7 +145,7 @@ agent_project/
 ├── task_phase2.txt  task_repair.txt  my_task.txt   # 任务书
 ├── execution.log            # 全链路执行日志（454 行）
 ├── generation.log           # 母体运行 1 原始轨迹
-├── git_history.txt          # 21 次提交详细记录
+├── git_history.txt          # 24 次提交详细记录
 ├── README.md  REPORT.md  requirements.txt  LICENSE
 ```
 
@@ -153,7 +153,7 @@ agent_project/
 
 ## 2. 阶段切换的 Git 提交及后续开发记录
 
-仓库共 **21 次提交**，时间跨度 `13:59:51 → 15:57:15`。逐条明细（含正文与逐文件增删）见 `git_history.txt`。
+仓库共 **24 次提交**，时间跨度 `13:59:51 → 16:05`。逐条明细（含正文与逐文件增删）见 `git_history.txt`。
 
 ### 2.1 阶段 ↔ 提交对应关系
 
@@ -180,6 +180,9 @@ agent_project/
 | `.gitignore` 显式屏蔽 `.env` / 密钥文件 | `56f867f` | 防止凭据误提交 |
 | `edit --source/--output` | `c0e8db8` | 素材路径写在 JSON 里，换素材必须改文件 |
 | `git_history.txt` 详细化 | `8a75fb5` | 原文件只有单行摘要，交付时缺上下文 |
+| `execution.log` 重组为四段式 | `f77f6f1` | 原日志有两处整段重复、且修复阶段缺失 |
+| 新增 `DELIVERABLES.md` 交付说明 | `b229324` | 五项交付要求需要一个统一索引与说明 |
+| 生成 Word 版交付材料 | `71fdbee` | 便于打印与离线提交 |
 
 ---
 
@@ -192,7 +195,7 @@ agent_project/
 | `execution.log` | **主日志**，454 行，四段式：PART 1 生成 / PART 2 自愈 / PART 3 子体执行 / PART 4 统计 | 交付首选，一条链路读完 |
 | `generation.log` | 母体运行 1 的原始轨迹（3 次调用） | 需核对原始输出时看 |
 | `logs/generation_trajectory.json` | 运行 1 的结构化轨迹（system/user/assistant/tool 共 8 条消息） | 供程序二次分析 |
-| `git_history.txt` | 21 次提交详细记录 | 与第 2 章配合阅读 |
+| `git_history.txt` | 24 次提交详细记录 | 与第 2 章配合阅读 |
 
 ### 3.2 链条如何关联
 
@@ -328,7 +331,7 @@ agent_project/
 | 两次剪辑 + 增量修改 | ✅ | `timeline_v1/v2.json`，v2 在 v1 基础上改 |
 | 成片交付 | ✅ | v1 14.08s / v2 16.11s，另有 2 条真实素材验证片 |
 | 源码 / 依赖 / 命令 / 配置 | ✅ | 本文第 1 章 + `requirements.txt` + `config.example.json` |
-| 阶段 Git 记录 | ✅ | 21 次提交，`git_history.txt` 268 行 |
+| 阶段 Git 记录 | ✅ | 24 次提交，`git_history.txt` 328 行 |
 | 完整执行日志 | ✅ | `execution.log` 454 行，四段式无重复 |
 | 开源协议 | ✅ | AGPLv3 全文 + README 章节 + 10 个文件 SPDX 头 |
 
@@ -350,7 +353,7 @@ agent_project/
 | 首次提交（骨架起步） | 13:59:51 |
 | 母体自主生成子体 | ~14:20 完成 |
 | 母体故障自愈 | ~14:25 完成 |
-| 第 21 次提交（文档收尾） | 15:57:15 |
+| 第 24 次提交（交付文档收尾） | 16:05 |
 | **端到端墙钟** | **约 1 小时 57 分钟**（含人工验收、能力扩展、文档与合规） |
 
 母体两次自主运行合计约 12 分钟；其余为素材准备、成片打磨、验收整改与文档撰写。
