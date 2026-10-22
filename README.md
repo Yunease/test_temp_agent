@@ -86,3 +86,14 @@ python child_agent/video_agent.py edit -i edit_v2.json -t timeline_v2.json
 - **异常分级**：`FormatError`（连续上限后结束）、`LimitsExceeded`、`TimeExceeded`、`Submitted`（正常终止）。
 - **轨迹可复核**：每步把完整消息历史序列化到 `trajectory.json`，并渲染为清晰可读的 `execution.log`。
 - **限额与成本感知**：step 上限、墙钟上限、token 统计，运行全程透明。
+
+## 开源协议
+
+本项目采用 **GNU Affero General Public License v3.0（AGPL-3.0-or-later）** 授权。
+
+- 许可证全文见 [`LICENSE`](LICENSE)；各源码文件头部均带 `SPDX-License-Identifier: AGPL-3.0-or-later` 标识。
+- 你可以自由地运行、研究、修改与分发本软件，但分发衍生作品时须同样以 AGPLv3 开源，并保留版权与许可证声明。
+- **AGPL 第 13 条（网络交互）**：若将修改后的版本作为网络服务提供给他人使用，必须向使用者提供对应的完整源代码。
+- 本软件按“原样”提供，不附带任何明示或默示担保；详见许可证正文。
+
+Copyright (C) 2026 Agent Project Contributors
