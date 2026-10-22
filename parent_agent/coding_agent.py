@@ -4,10 +4,10 @@
 Agent 1 —— Coding Agent（母体，模块化 CLI 入口）
 
 用法：
-    python coding_agent.py --task "任务指令" [--config config.json]
-    python coding_agent.py --task-file task.txt --log execution.log
+    python parent_agent/coding_agent.py --task "任务指令" [--config parent_agent/config.json]
+    python parent_agent/coding_agent.py --task-file task.txt --log execution.log
 
-模块结构见 coding_agent/ 包：config / model / tools / environment / agent / trajectory。
+模块结构见 parent_agent/coding_agent/ 包：config / model / tools / environment / agent / trajectory。
 """
 import argparse
 import json
@@ -16,7 +16,9 @@ import sys
 from pathlib import Path
 
 # 允许从项目根目录直接运行（无需安装）
+# ROOT 为本文件所在目录（parent_agent/），PROJECT_ROOT 为项目根（母体在此目录下读写子体与素材）
 ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = ROOT.parent
 sys.path.insert(0, str(ROOT))
 
 from coding_agent import CodingAgent, LocalEnvironment, Model, render_human_log
@@ -59,7 +61,7 @@ def main():
     model_cfg = load_model_config()
 
     model = Model(config_class=ModelConfig, **model_cfg)
-    env = LocalEnvironment(config_class=EnvironmentConfig, root=ROOT, cwd=str(ROOT), timeout=args.timeout)
+    env = LocalEnvironment(config_class=EnvironmentConfig, root=PROJECT_ROOT, cwd=str(PROJECT_ROOT), timeout=args.timeout)
     agent = CodingAgent(
         model, env,
         config_class=AgentConfig,

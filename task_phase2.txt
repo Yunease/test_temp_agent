@@ -1,4 +1,4 @@
-请自主编写一个名为 video_agent.py 的视频剪辑 Agent。该 Agent 必须能够接收视频路径和剪辑指令，提取视频元数据，并调用 MoviePy/FFmpeg 执行裁剪、拼接并导出 mp4。
+请自主编写一个名为 video_agent.py 的视频剪辑 Agent，并保存到 child_agent/video_agent.py（项目根下的 child_agent/ 目录）。该 Agent 必须能够接收视频路径和剪辑指令，提取视频元数据，并调用 FFmpeg 执行裁剪、拼接并导出 mp4。
 
 具体要求：
 1. 提供命令行接口（argparse），至少支持以下子命令：
@@ -7,5 +7,5 @@
    - edit：接收剪辑指令 JSON 文件（含素材区间裁剪、多段拼接、淡入淡出、文字水印、变速等参数），按指令渲染并导出 mp4，同时导出剪辑时间线 JSON（timeline）。
 2. 剪辑指令 JSON 与时间线 JSON 的结构需自定义但要清晰，编辑能力支持"读取上次 timeline 在其基础上增量修改"。
 3. 优先直接调用 ffmpeg/ffprobe 子进程实现（本机 ffmpeg 已在 PATH），不要依赖未安装的重型库。
-4. 写完后必须执行 python video_agent.py --test 自检；若报错，读取 stderr 修复代码并重写，直至 returncode == 0。
+4. 写完后必须执行 python child_agent/video_agent.py --test 自检；若报错，读取 stderr 修复代码并重写，直至 returncode == 0。
 5. 代码需有清晰的中文注释与模块划分。

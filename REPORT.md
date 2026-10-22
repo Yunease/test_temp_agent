@@ -30,8 +30,8 @@
 ## 三、阶段产出（对照规划书）
 | 阶段 | 产物 |
 |---|---|
-| 一 母体骨架 | `coding_agent.py` + `coding_agent/` 包（已 Git 提交） |
-| 二 繁育子体 | `video_agent.py`（母体生成，含一次语法故障→读取 stderr→修复→`--test` 通过） |
+| 一 母体骨架 | `parent_agent/`（coding_agent.py + coding_agent/ 包，已 Git 提交） |
+| 二 繁育子体 | `child_agent/video_agent.py`（母体生成，含一次语法故障→读取 stderr→修复→`--test` 通过） |
 | 三 首轮成片 | `material_analysis.json`、`timeline_v1.json`、`output/v1_output.mp4`（14.1s） |
 | 四 二次修改 | `timeline_v2.json`、`output/v2_output.mp4`（16.1s，开头 1.5x + 结尾 2s 黑屏淡出） |
 | 五 材料整理 | `README.md`、`requirements.txt`、`git_history.txt`、`execution.log`、`REPORT.md` |
@@ -53,9 +53,9 @@
 ## 六、如何复现
 ```bash
 pip install -r requirements.txt          # openai / jinja2 / pydantic / requests
-# 配置 LLM：复制 config.example.json 为 config.json 并填入 base_url/api_key/model
-python coding_agent.py --task-file task_phase2.txt --max-rounds 40   # 重新繁育子体
-python video_agent.py analyze -i material/clip_a.mp4 -o material_analysis.json
-python video_agent.py edit -i edit_v1.json -t timeline_v1.json
-python video_agent.py edit -i edit_v2.json -t timeline_v2.json
+# 配置 LLM：复制 parent_agent/config.example.json 为 parent_agent/config.json 并填入 base_url/api_key/model
+python parent_agent/coding_agent.py --task-file task_phase2.txt --max-rounds 40   # 重新繁育子体到 child_agent/
+python child_agent/video_agent.py analyze -i material/clip_a.mp4 -o material_analysis.json
+python child_agent/video_agent.py edit -i edit_v1.json -t timeline_v1.json
+python child_agent/video_agent.py edit -i edit_v2.json -t timeline_v2.json
 ```

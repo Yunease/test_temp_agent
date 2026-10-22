@@ -7,28 +7,24 @@
 
 ```
 agent_project/
-├── coding_agent.py            # Agent 1 入口（CLI）
-├── coding_agent/              # Agent 1 模块化实现
-│   ├── config.py              #   pydantic 配置 + 提示词模板
-│   ├── model.py               #   LLM 封装（OpenAI 兼容） + token 统计
-│   ├── tools.py               #   工具 Schema：write_file / read_file / execute_code / submit_result
-│   ├── environment.py         #   执行环境：动作分发、超时保护、终止信号
-│   ├── agent.py               #   主循环：run/step/query/execute_actions + 异常分级 + 轨迹保存
-│   ├── trajectory.py          #   把轨迹渲染为人类可读的 execution.log
-│   └── exceptions.py          #   异常分级：FormatError / LimitsExceeded / TimeExceeded / Submitted
-├── video_agent.py             # Agent 2：由母体自主生成的视频剪辑 Agent
-├── config.json                # 本地 LLM 配置（含 api_key，已 gitignore）
-├── config.example.json        # 配置样例（不含密钥）
+├── parent_agent/              # Agent 1：Coding Agent（母体，自主编程闭环）
+│   ├── coding_agent.py        #   入口 CLI
+│   ├── coding_agent/          #   模块化实现（config/model/tools/environment/agent/trajectory/exceptions）
+│   ├── config.json            #   本地 LLM 配置（含 api_key，已 gitignore）
+│   └── config.example.json    #   配置样例（不含密钥）
+├── child_agent/               # Agent 2：Video Agent（子体，由母体生成）
+│   └── video_agent.py
 ├── requirements.txt           # 依赖
 ├── logs/
 │   ├── trajectory.json        # 结构化执行轨迹（故障自愈阶段，可完整复盘每一轮）
 │   ├── generation_trajectory.json  # 结构化执行轨迹（子体生成阶段）
 │   └── execution.log          # 人类可读执行日志（需求→生成→修复→验证→成片 全链路）
-├── material/                  # 现场素材（clip_a/b/c.mp4 + logo.png）
-├── output/                    # 成片 v1_output.mp4 / v2_output.mp4
+├── material/                  # 现场素材（clip_a/b/c.mp4 + logo.png）—— 子体读取
+├── output/                    # 成片 v1_output.mp4 / v2_output.mp4 —— 子体写出
 ├── material_analysis.json     # 素材元数据报告
-├── timeline_v1.json           # 首轮剪辑时间线
-├── timeline_v2.json           # 二次修改时间线
+├── edit_v1.json / edit_v2.json# 两轮剪辑指令
+├── timeline_v1.json / timeline_v2.json  # 两次剪辑时间线
+├── task_phase2.txt / task_repair.txt    # 母体任务指令（生成 / 故障自愈）
 ├── git_history.txt            # Git 阶段演进历史
 └── REPORT.md                  # 一页纸说明（架构 / 消耗 / 局限）
 ```
@@ -65,20 +61,21 @@ pip install -r requirements.txt        # openai / jinja2 / pydantic / requests
 
 ### 3. 运行母体，自主生成子体（阶段二）
 ```bash
-python coding_agent.py --task-file task_phase2.txt --max-rounds 40
-# 完成后生成 video_agent.py；轨迹 logs/trajectory.json、日志 logs/execution.log
+# 从项目根目录运行；母体会把子体写到 child_agent/video_agent.py
+python parent_agent/coding_agent.py --task-file task_phase2.txt --max-rounds 40
+# 完成后生成 child_agent/video_agent.py；轨迹 logs/trajectory.json、日志 logs/execution.log
 ```
 
 ### 4. 子体实操
 ```bash
 # 素材元数据提取
-python video_agent.py analyze -i material/clip_a.mp4 -o material_analysis.json
+python child_agent/video_agent.py analyze -i material/clip_a.mp4 -o material_analysis.json
 
 # 首轮剪辑（区间裁剪 + 拼接 + 淡入淡出 + 水印），导出成片与时间线
-python video_agent.py edit -i edit_v1.json -t timeline_v1.json
+python child_agent/video_agent.py edit -i edit_v1.json -t timeline_v1.json
 
 # 二次增量修改（开头 1.5x 变速 + 结尾 2s 黑屏淡出）
-python video_agent.py edit -i edit_v2.json -t timeline_v2.json
+python child_agent/video_agent.py edit -i edit_v2.json -t timeline_v2.json
 ```
 
 ## 设计要点（对照参考实现 mini-swe-agent）
