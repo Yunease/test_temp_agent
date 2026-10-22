@@ -12,6 +12,8 @@ video_agent.py
 - edit：根据 JSON 剪辑指令执行裁剪、拼接、淡入淡出、文字水印、变速等操作，
         导出 mp4 并生成剪辑时间线 timeline JSON。
 - --test：自检模式，验证环境及核心函数可用性。
+         默认对项目同级的 `test mp4/test.mp4` 做真实素材冒烟测试（探测 + 短片段剪辑），
+         可用 `--test-input <path>` 指定其他素材；文件缺失时自动回退到合成素材。
 
 设计原则：
 - 优先直接调用 ffmpeg/ffprobe 子进程，不依赖 moviepy 等重型库。
@@ -39,6 +41,14 @@ DEFAULT_VIDEO_CODEC = "libx264"
 DEFAULT_AUDIO_CODEC = "aac"
 DEFAULT_PRESET = "medium"
 DEFAULT_CRF = "23"
+
+# 真实测试素材默认路径：项目根目录同级的 "test mp4/test.mp4"。
+# 可用 `--test-input <path>` 覆盖；文件不存在时自检自动回退到合成素材，保证零依赖可跑。
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_PROJECT_ROOT = os.path.dirname(_SCRIPT_DIR)
+DEFAULT_TEST_VIDEO = os.path.normpath(
+    os.path.join(_PROJECT_ROOT, os.pardir, "test mp4", "test.mp4")
+)
 
 
 # ---------------------------------------------------------------------------
@@ -675,9 +685,12 @@ def edit_command(args: argparse.Namespace) -> int:
 # 自检模块
 # ---------------------------------------------------------------------------
 
-def self_test() -> int:
+def self_test(real_video: Optional[str] = None) -> int:
     """
     自检模式：验证 ffmpeg/ffprobe 可用，并测试核心函数。
+
+    real_video: 真实素材路径，默认取 DEFAULT_TEST_VIDEO（../test mp4/test.mp4）。
+                文件不存在时自动跳过真实素材环节，仅跑合成素材自检。
     """
     print("开始自检...")
 
@@ -691,7 +704,26 @@ def self_test() -> int:
         return 1
     print("[OK] ffmpeg 与 ffprobe 已找到。")
 
-    # 2. 生成测试视频并验证 analyze
+    # 2. 真实素材探测（默认 ../test mp4/test.mp4）
+    real_video = real_video or DEFAULT_TEST_VIDEO
+    real_meta = None
+    if os.path.isfile(real_video):
+        print(f"[..] 使用真实测试素材: {real_video}")
+        try:
+            real_meta = probe_video(real_video)
+            assert real_meta["width"] and real_meta["height"]
+            assert real_meta["duration"] > 0
+            print(
+                f"[OK] 真实素材探测成功: {real_meta['width']}x{real_meta['height']}, "
+                f"{real_meta['duration']:.2f}s, {real_meta['codec_name']}"
+            )
+        except Exception as exc:
+            print(f"[FAIL] 真实素材探测失败: {exc}", file=sys.stderr)
+            return 1
+    else:
+        print(f"[SKIP] 未找到真实测试素材: {real_video}（回退到合成素材）")
+
+    # 3. 生成合成测试视频并验证 analyze
     with tempfile.TemporaryDirectory() as tmpdir:
         test_video = os.path.join(tmpdir, "test.mp4")
         # 生成 2 秒 1280x720 测试视频
@@ -711,7 +743,7 @@ def self_test() -> int:
             return 1
         print("[OK] 测试视频生成成功。")
 
-        # 3. 测试元数据提取
+        # 4. 测试元数据提取
         try:
             meta = probe_video(test_video)
             assert meta["width"] == 1280
@@ -722,7 +754,7 @@ def self_test() -> int:
             print(f"[FAIL] 元数据提取失败: {exc}", file=sys.stderr)
             return 1
 
-        # 4. 测试剪辑指令
+        # 5. 测试剪辑指令
         edit_json_path = os.path.join(tmpdir, "edit.json")
         output_path = os.path.join(tmpdir, "output.mp4")
         timeline_path = os.path.join(tmpdir, "timeline.json")
@@ -772,14 +804,14 @@ def self_test() -> int:
             return 1
         print("[OK] 剪辑执行成功，输出视频与时间线均已生成。")
 
-        # 5. 验证 timeline 增量修改
+        # 6. 验证 timeline 增量修改
         with open(timeline_path, "r", encoding="utf-8") as f:
             timeline_data = json.load(f)
         assert "segments" in timeline_data
         assert len(timeline_data["segments"]) == 1
         print("[OK] 时间线 JSON 结构正确。")
 
-        # 6. 测试新增能力：交叉淡化转场 + 图片卡片 + 背景音乐
+        # 7. 测试新增能力：交叉淡化转场 + 图片卡片 + 背景音乐
         # 6.1 生成片头卡片（图片）与背景音乐（1 秒正弦音循环）
         title_card = os.path.join(tmpdir, "card.png")
         bgm_file = os.path.join(tmpdir, "bgm.wav")
@@ -827,6 +859,35 @@ def self_test() -> int:
                     return 1
                 print("[OK] 转场 + 片头卡片 + 背景音乐 渲染成功。")
 
+        # 8. 真实素材短片段剪辑验证（探测通过才执行）
+        if real_meta is not None:
+            real_out = os.path.join(tmpdir, "real_out.mp4")
+            real_edit_path = os.path.join(tmpdir, "real_edit.json")
+            real_edit = {
+                "output": real_out,
+                "width": 640,
+                "height": 360,
+                "fps": 30,
+                "segments": [
+                    {
+                        "source": real_video,
+                        "start": 0.0,
+                        "end": min(3.0, max(1.0, real_meta["duration"])),
+                        "speed": 1.0,
+                    }
+                ],
+            }
+            with open(real_edit_path, "w", encoding="utf-8") as f:
+                json.dump(real_edit, f, ensure_ascii=False, indent=2)
+            real_args = argparse.Namespace(
+                instruction=real_edit_path,
+                timeline=os.path.join(tmpdir, "real_timeline.json"),
+            )
+            if edit_command(real_args) != 0 or not os.path.isfile(real_out):
+                print("[FAIL] 真实素材剪辑失败。", file=sys.stderr)
+                return 1
+            print("[OK] 真实素材短片段剪辑成功（0-3s）。")
+
     print("自检全部通过。")
     return 0
 
@@ -857,6 +918,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     # --test 自检
     parser.add_argument("--test", action="store_true", help="自检模式")
+    parser.add_argument(
+        "--test-input",
+        default=None,
+        metavar="PATH",
+        help="自检使用的真实素材路径（默认 ../test mp4/test.mp4）",
+    )
 
     return parser
 
@@ -869,7 +936,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = parser.parse_args(argv)
 
     if args.test:
-        return self_test()
+        return self_test(args.test_input)
 
     if args.command == "analyze":
         return analyze_command(args)

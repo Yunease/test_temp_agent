@@ -81,6 +81,30 @@ python child_agent/video_agent.py edit -i edit_v1.json -t timeline_v1.json
 python child_agent/video_agent.py edit -i edit_v2.json -t timeline_v2.json
 ```
 
+## 测试与自检
+
+项目没有独立的 `tests/` 目录，测试入口内置于子体，默认对**项目根目录同级**的
+`test mp4/test.mp4` 做真实素材冒烟测试：
+
+```bash
+# 默认使用 ../test mp4/test.mp4
+python child_agent/video_agent.py --test
+
+# 指定其他素材
+python child_agent/video_agent.py --test --test-input "D:/videos/sample.mp4"
+```
+
+自检覆盖 5 个环节：
+
+1. `ffmpeg` / `ffprobe` 可用性检查；
+2. **真实素材探测**（分辨率 / 时长 / 编码）；
+3. 合成素材的 `analyze` + `edit` + timeline 结构校验；
+4. 交叉淡化转场 + 图片卡片 + 背景音乐混合；
+5. **真实素材 0–3s 短片段剪辑**（验证解码与重编码链路）。
+
+真实素材缺失时自动回退到合成素材，保证零依赖即可跑通；路径由
+`child_agent/video_agent.py` 顶部的 `DEFAULT_TEST_VIDEO` 常量解析，可用 `--test-input` 覆盖。
+
 ## 设计要点（对照参考实现 mini-swe-agent）
 
 - **三层分离**：`Model`（LLM）/`Environment`（执行）/`Agent`（调度）各司其职，配置全部走 pydantic。
